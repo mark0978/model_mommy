@@ -211,6 +211,7 @@ def is_iterator(value):
 
 class Mommy(object):
     attr_mapping = {}
+    with_mapping = {}
     type_mapping = None
 
     # Note: we're using one finder for all Mommy instances to avoid
@@ -359,6 +360,8 @@ class Mommy(object):
             generator = self.attr_mapping[field.name]
         elif getattr(field, 'choices'):
             generator = generators.gen_from_choices(field.choices)
+        elif field.name in self.with_mapping:
+            generator = self.with_mapping[field.name]
         elif isinstance(field, ForeignKey) and isinstance(field.rel.to, ContentType):
             generator = self.type_mapping[ContentType]
         elif field.__class__ in self.type_mapping:
