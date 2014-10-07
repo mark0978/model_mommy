@@ -2,10 +2,13 @@
 import inspect
 import itertools
 from . import mommy
+from .timezone import tz_aware
 from .exceptions import RecipeNotFound, RecipeIteratorEmpty
 
 from six import string_types
+import datetime
 
+finder = mommy.ModelFinder()
 
 class Recipe(object):
     def __init__(self, model, **attrs):
@@ -23,7 +26,11 @@ class Recipe(object):
             if new_attrs.get(k):
                 continue
             elif mommy.is_iterator(v):
-                if self.model.objects.count() == 0:
+                if isinstance(self.model, string_types):
+                    m = finder.get_model(self.model)
+                else:
+                    m = self.model
+                if m.objects.count() == 0 or k not in self._iterator_backups:
                     self._iterator_backups[k] = itertools.tee(self._iterator_backups.get(k, [v])[0])
                 mapping[k] = self._iterator_backups[k][1]
             elif isinstance(v, RecipeForeignKey):
@@ -72,8 +79,27 @@ def foreign_key(recipe):
 
 
 def seq(value, increment_by=1):
-    for n in itertools.count(increment_by, increment_by):
-        yield value + type(value)(n)
+    if type(value) in {datetime.datetime, datetime.date,  datetime.time}:
+        if type(value) is datetime.date:
+            date = datetime.datetime.combine(value, datetime.datetime.now().time())
+        elif type(value) is datetime.time:
+            date = datetime.datetime.combine(datetime.date.today(), value)
+        else:
+            date = value
+        # convert to epoch time
+        start = (date - datetime.datetime(1970,1,1)).total_seconds()
+        increment_by =  increment_by.total_seconds()
+        for n in itertools.count(increment_by, increment_by):
+            series_date = tz_aware(datetime.datetime.utcfromtimestamp(start + n))
+            if type(value) is datetime.time:
+                yield series_date.time()
+            elif type(value) is datetime.date:
+                yield series_date.date()
+            else:
+                yield series_date
+    else:
+        for n in itertools.count(increment_by, increment_by):
+            yield value + type(value)(n)
 
 class related(object):
     def __init__(self, *args):

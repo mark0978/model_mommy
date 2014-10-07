@@ -114,7 +114,7 @@ def gen_boolean():
 
 
 def gen_url():
-    return u'http://www.%s.com' % gen_string(30)
+    return u'http://www.%s.com/' % gen_string(30)
 
 
 def gen_email():
@@ -127,6 +127,11 @@ def gen_ipv6():
 
 def gen_ipv4():
     return ".".join(str(randint(1, 255)) for i in range(4))
+
+
+def gen_ipv46():
+    ip_gen = choice([gen_ipv4, gen_ipv6])
+    return ip_gen()
 
 
 def gen_content_type():

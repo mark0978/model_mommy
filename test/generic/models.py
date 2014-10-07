@@ -15,6 +15,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from .fields import *
 from model_mommy.timezone import smart_datetime as datetime
+import datetime as base_datetime
 
 # check whether or not PIL is installed
 try:
@@ -33,6 +34,8 @@ OCCUPATION_CHOCIES = (
     ('Education', (
         ('teacher', 'Teacher'),
         ('principal', 'Principal'))))
+
+TEST_TIME = base_datetime.datetime(2014, 7, 21, 15, 39, 58, 457698)
 
 
 class ModelWithImpostorField(models.Model):
@@ -151,6 +154,7 @@ class DummyBlankFieldsModel(models.Model):
     blank_text_field = models.TextField(blank=True)
 
 class DummyDefaultFieldsModel(models.Model):
+    default_id = models.AutoField(primary_key=True)
     default_char_field = models.CharField(max_length=50, default='default')
     default_text_field = models.TextField(default='default')
     default_int_field = models.IntegerField(default=123)
@@ -180,6 +184,7 @@ else:
 
 
 class DummyMultipleInheritanceModel(DummyDefaultFieldsModel, Person):
+    my_id = models.AutoField(primary_key=True)
     my_dummy_field = models.IntegerField()
 
 class Ambiguous(models.Model):
@@ -214,8 +219,9 @@ class DummyUniqueIntegerFieldModel(models.Model):
 
 if VERSION < (1, 4):
     class DummyIPAddressFieldModel(models.Model):
-        ip = models.IPAddressField()  # Deprecated in Django 1.7
+        ipv4_field = models.IPAddressField()  # Deprecated in Django 1.7
 else:
     class DummyGenericIPAddressFieldModel(models.Model):
-        ip = models.GenericIPAddressField()  # New in Django 1.4
-
+        ipv4_field = models.GenericIPAddressField(protocol='IPv4')
+        ipv6_field = models.GenericIPAddressField(protocol='IPv6')
+        ipv46_field = models.GenericIPAddressField(protocol='both')
